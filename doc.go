@@ -10,49 +10,44 @@ import (
 )
 
 type section struct {
-	docsText string
+	docs string
 	docsHTML string
-	codeText string
+	code string
 	codeHTML string
 }
 
-var commentLine = regexp.MustCompile("^\\s*//[^\n]")
+var match = regexp.MustCompile("^\\s*//[^\n]")
 
 func parse(content string) []*section {
-	sections := make([]*section, 0)
 	lines := strings.Split(content, "\n")
-	docs, code := "", ""
-
-	saveSection := func() {
-		if code == "" { return }
-		sec := section{docsText: docs, codeText: code}
-		sections = append(sections, &sec)
-		docs, code = "", ""
-	}
+	sections := make([]*section, 0)
+	current := new(section)
 
 	for _, line := range lines {
-		if commentLine.FindString(line) != "" {
-			saveSection()
-			docs += commentLine.ReplaceAllString(line, "") + "\n"
+		if match.FindString(line) != "" {
+			if current.code != "" {
+				sections = append(sections, current)
+				current = new(section)
+			}
+			current.docs += match.ReplaceAllString(line, "") + "\n"
 		} else {
-			code += line + "\n"
+			current.code += line + "\n"
 		}
 	}
 	
-	saveSection()
-	return sections
+	return append(sections, current)
 }
 
 func highlight(sections []*section) []*section {
 	for _, section := range sections {
-		section.codeHTML = section.codeText
+		section.codeHTML = section.code
 	}
 	return sections
 }
 
 func markdown(sections []*section) []*section {
 	for _, section := range sections {
-		md := blackfriday.MarkdownBasic([]byte(section.docsText))
+		md := blackfriday.MarkdownBasic([]byte(section.docs))
 		section.docsHTML = string(md)
 	}
 	return sections
