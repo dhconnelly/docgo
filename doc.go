@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	//"github.com/dhconnelly/blackfriday"
 	"io/ioutil"
 	"litebrite"
+	"text/template"
 )
 
 var match = regexp.MustCompile("^\\s*//[^\n]")
+var t = template.Must(template.ParseFiles("doc.templ"))
+
+type File struct {
+	Title string
+	Source string
+}
 
 func main() {
 	files := os.Args[1:]
@@ -18,6 +24,8 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		}
-		fmt.Println(litebrite.Highlight(string(src)))
+		
+		out := litebrite.Highlight(string(src))
+		t.Execute(os.Stdout, File{filename, out})
 	}
 }

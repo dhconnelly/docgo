@@ -1,0 +1,30 @@
+body {
+    
+}
+
+#docgo pre code {
+    background-color: rgb(47, 47, 47);
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
