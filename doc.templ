@@ -7,7 +7,7 @@
 </head>
 <body>
 <div id="docgo">
-{{.Source}}
+  <pre><code><table>{{range .Sections}}<tr class="section"><td class="doc">{{.Doc}}</td><td class="code">{{.Code}}</td></tr>{{end}}</table></code></pre>
 </div>
 </body>
 </html>

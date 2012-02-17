@@ -1,12 +1,12 @@
 body {
-    
+    background-color: rgb(47, 47, 47);
 }
 
 #docgo pre code {
-    background-color: rgb(47, 47, 47);
     font-size: 12px;
     line-height: 18px;
     font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
 }
 
 #docgo div {
@@ -27,4 +27,17 @@ body {
 
 #docgo .operator {
     color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo .section .doc {
+    vertical-align: top;
+    //float: left;
+}
+
+#docgo .section .code {
+    vertical-align: top;
+    //float: right;
 }
