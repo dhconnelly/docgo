@@ -7,7 +7,23 @@
 </head>
 <body>
 <div id="docgo">
-  <pre><code><table>{{range .Sections}}<tr class="section"><td class="doc">{{.Doc}}</td><td class="code">{{.Code}}</td></tr>{{end}}</table></code></pre>
+  <div id="background"></div>
+  <table>
+    <thead>
+      <tr>
+	<th class="doc"><h1>{{.Title}}</h1></th>
+	<th class="code"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Sections}}
+      <tr class="section">
+	<td class="doc">{{.Doc}}</td>
+	<td class="code"><pre><code>{{.Code}}</code></pre></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
 </div>
 </body>
 </html>

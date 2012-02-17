@@ -1,16 +1,26 @@
 body {
-    background-color: rgb(47, 47, 47);
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
 }
 
-#docgo pre code {
-    font-size: 12px;
-    line-height: 18px;
-    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
-    color: rgb(120, 120, 120);
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
 }
 
 #docgo div {
     display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
 }
 
 #docgo .keyword {
@@ -32,12 +42,44 @@ body {
 #docgo .comment {
 }
 
-#docgo .section .doc {
-    vertical-align: top;
-    //float: left;
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
 }
 
-#docgo .section .code {
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
     vertical-align: top;
-    //float: right;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    width: 684px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+}
+
+#docgo .code pre code  {
+    vertical-align: top;
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
 }

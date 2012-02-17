@@ -8,6 +8,7 @@ import (
 	"litebrite"
 	"text/template"
 	"strings"
+	"blackfriday"
 )
 
 var match = regexp.MustCompile("^\\s*//[^\n]\\s?")
@@ -18,15 +19,15 @@ type section struct {
 	Code string
 }
 
-func extractSections(source string) []section {
-	sections := make([]section, 0)
-	var current section
+func extractSections(source string) []*section {
+	sections := make([]*section, 0)
+	current := new(section)
 	
 	for _, line := range strings.Split(source, "\n") {
 		if match.FindString(line) != "" {
 			if current.Code != "" {
 				sections = append(sections, current)
-				current = section{}
+				current = new(section)
 			}
 			repl := match.ReplaceAllString(line, "")
 			current.Doc += repl + "\n"
@@ -38,9 +39,17 @@ func extractSections(source string) []section {
 	return append(sections, current)
 }
 
+func markdownComments(sections []*section) {
+	for _, section := range sections {
+		md := blackfriday.MarkdownBasic([]byte(section.Doc))
+		section.Doc = string(md)
+	}
+	return
+}
+
 type File struct {
 	Title string
-	Sections []section
+	Sections []*section
 }
 
 func main() {
@@ -59,6 +68,7 @@ func main() {
 		out := h.Highlight(string(src))
 
 		sections := extractSections(out)
+		markdownComments(sections)
 		errt := t.Execute(os.Stdout, File{filename, sections})
 		if errt != nil {
 			fmt.Fprintf(os.Stderr, errt.Error())
