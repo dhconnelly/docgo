@@ -65,7 +65,7 @@ func main() {
 		h.LiteralClass = "literal"
 		h.KeywordClass = "keyword"
 		h.OperatorClass = "operator"
-		out := h.Highlight(string(src))
+		out := string(h.Highlight(src))
 
 		sections := extractSections(out)
 		markdownComments(sections)
