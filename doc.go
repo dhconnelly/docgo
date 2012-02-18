@@ -11,7 +11,7 @@ import (
 	"blackfriday"
 )
 
-var match = regexp.MustCompile("^\\s*//[^\n]\\s?")
+var match = regexp.MustCompile(`^\s*//[^\n]\s?`)
 var t = template.Must(template.ParseFiles("doc.templ"))
 
 type section struct {
@@ -47,6 +47,39 @@ func markdownComments(sections []*section) {
 	return
 }
 
+const SEP = "// [docgoseparator]\n"
+var unsep = regexp.MustCompile(`<div class="comment">// \[docgoseparator\]\n</div>`)
+
+func highlightSections(sections []*section) {
+	// rejoin the source code fragments, using SEP as delimiter
+	code := make([]byte, 0)
+	for i := 0; i < len(sections) - 1; i++ {
+		code = append(code, sections[i].Code...)
+		code = append(code, SEP...)
+	}
+	code = append(code, sections[len(sections)-1].Code...)
+
+	// highlight the joined source
+	h := new(litebrite.Highlighter)
+	h.IdentClass = "ident"
+	h.LiteralClass = "literal"
+	h.KeywordClass = "keyword"
+	h.OperatorClass = "operator"
+	h.CommentClass = "comment"
+	hlcode := string(h.Highlight(code))
+
+	// regexp package doesn't support splitting, so first replace all
+	// UNSEP matches with SEP, which we can strings.Split around.
+	segments := strings.Split(unsep.ReplaceAllString(hlcode, SEP), SEP)
+	if len(segments) != len(sections) {
+		panic("Failed to recover all source fragments!")
+	}
+	
+	for i, segment := range segments {
+		sections[i].Code = segment
+	}
+}
+
 type File struct {
 	Title string
 	Sections []*section
@@ -60,15 +93,10 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		}
 
-		h := new(litebrite.Highlighter)
-		h.IdentClass = "ident"
-		h.LiteralClass = "literal"
-		h.KeywordClass = "keyword"
-		h.OperatorClass = "operator"
-		out := string(h.Highlight(src))
-
-		sections := extractSections(out)
+		sections := extractSections(string(src))
+		highlightSections(sections)
 		markdownComments(sections)
+		
 		errt := t.Execute(os.Stdout, File{filename, sections})
 		if errt != nil {
 			fmt.Fprintf(os.Stderr, errt.Error())
