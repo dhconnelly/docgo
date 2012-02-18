@@ -9,7 +9,10 @@ import (
 	"text/template"
 	"strings"
 	"blackfriday"
+	"flag"
 )
+
+var outdir *string = flag.String("outdir", ".", "directory for generated docs")
 
 var match = regexp.MustCompile(`^\s*//[^\n]\s?`)
 var t = template.Must(template.ParseFiles("doc.templ"))
@@ -47,8 +50,10 @@ func markdownComments(sections []*section) {
 	return
 }
 
-const SEP = "// [docgoseparator]\n"
-var unsep = regexp.MustCompile(`<div class="comment">// \[docgoseparator\]\n</div>`)
+const SEP = "/*[docgoseparator]*/"
+var UNSEP = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/\s*</div>`)
+var BEGINWS = len("<div class=\"comment\">") + len(SEP)
+var ENDWS = len("</div>")
 
 func highlightSections(sections []*section) {
 	// rejoin the source code fragments, using SEP as delimiter
@@ -60,24 +65,25 @@ func highlightSections(sections []*section) {
 	code = append(code, sections[len(sections)-1].Code...)
 
 	// highlight the joined source
-	h := new(litebrite.Highlighter)
-	h.IdentClass = "ident"
-	h.LiteralClass = "literal"
-	h.KeywordClass = "keyword"
-	h.OperatorClass = "operator"
-	h.CommentClass = "comment"
-	hlcode := string(h.Highlight(code))
+	h := litebrite.Highlighter{"operator", "ident", "literal", "keyword", "comment"}
+	hlcode := h.Highlight(code)
 
-	// regexp package doesn't support splitting, so first replace all
-	// UNSEP matches with SEP, which we can strings.Split around.
-	segments := strings.Split(unsep.ReplaceAllString(hlcode, SEP), SEP)
-	if len(segments) != len(sections) {
-		panic("Failed to recover all source fragments!")
+	// split the highlighted code around unsep.  some whitespace from
+	// the source might be in the `<div>...</div>` that wraps SEP, so we
+	// we will add it back when we find it.
+	matches := UNSEP.FindAllIndex(hlcode, -1)
+	lastend := 0
+	lastws := ""
+	for i, match := range matches {
+		begin, end := match[0], match[1]
+		segment := string(hlcode[lastend:begin])
+		sections[i].Code = lastws + segment
+		beginws := begin + BEGINWS
+		endws := end - ENDWS
+		lastws = string(hlcode[beginws:endws])
+		lastend = end
 	}
-	
-	for i, segment := range segments {
-		sections[i].Code = segment
-	}
+	sections[len(sections)-1].Code = lastws + string(hlcode[lastend:])
 }
 
 type File struct {
@@ -85,21 +91,52 @@ type File struct {
 	Sections []*section
 }
 
-func main() {
-	files := os.Args[1:]
-	for _, filename := range files {
-		src, err := ioutil.ReadFile(filename)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-		}
+func processFile(filename string) {
+	src, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		return
+	}
+	fi, _ := os.Stat(filename) // ignore error--already read the file
 
-		sections := extractSections(string(src))
-		highlightSections(sections)
-		markdownComments(sections)
-		
-		errt := t.Execute(os.Stdout, File{filename, sections})
-		if errt != nil {
-			fmt.Fprintf(os.Stderr, errt.Error())
-		}
+	sections := extractSections(string(src))
+	highlightSections(sections)
+	markdownComments(sections)
+
+	name := strings.Replace(fi.Name(), ".go", "", -1)
+	out, err2 := os.Create(name + ".html") // TODO use outdir
+	if err2 != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err2.Error())
+		return
+	}
+	
+	errt := t.Execute(out, File{name, sections})
+	if errt != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", errt.Error())
+		return
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	// check if we can write to outdir
+	fi, err := os.Stat(*outdir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		return
+	}
+	if !fi.Mode().IsDir() {
+		fmt.Fprintf(os.Stderr, "outdir must be a valid directory!\n")
+		return
+	}
+	if (fi.Mode().Perm() & 0200) == 0 {
+		fmt.Fprintf(os.Stderr, "can't write to outdir!\n")
+		return
+	}
+	
+	// process all input files
+	for _, filename := range flag.Args() {
+		processFile(filename)
 	}
 }
