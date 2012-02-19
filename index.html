@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>doc.go</title>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>doc.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"><p>docgo is a <a href="http://golang.org">Go</a> implementation of <a href="http://github.com/jashkenas">Jeremy Ashkenas</a>'s <a href="http://jashkenas.github.com/docco/">docco</a>,
+a literate-programming-style documentation generator.  Running docgo on your
+Go source files produces HTML with comments and code side-by-side.</p>
+
+<p>Comments are processed by <a href="http://daringfireball.net/projects/markdown">Markdown</a> using a <a href="http://github.com/dhconnelly/blackfriday">fork</a> of <a href="http://github.com/russross">Russ Ross</a>'s <a href="http://github.com/russross/blackfriday">BlackFriday</a> library, and code is
+syntax-highlighted using <a href="http://dhconnelly.github.com/litebrite">litebrite</a>,
+a Go syntax highlighting library.</p>
+
+<p>With a recent Go weekly build (I'm using <code>weekly.2012-2-07</code>), you can get,
+install, and run docgo by doing the following at a command line:</p>
+
+<p><code>go get github.com/dhconnelly/docgo</code><br>
+<code>go install github.com/dhconnelly/docgo</code><br>
+<code>docgo file1.go file2.go</code></p>
+
+<p>This will create <code>file1.html</code> and <code>file2.html</code> in the current directory.</p>
+
+<p>There are two command-line flags:</p>
+
+<ul>
+<li><code>resdir</code>: a path to the directory containing the CSS styles and HTML
+templates (this is usually the docgo source directory)</li>
+<li><code>outdir</code>: the directory to which the generated HTML should be writen</li>
+</ul>
+</td>
+	<td class="code"><pre><code></code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>docgo is copyright 2012 Daniel Connelly.  All rights reserved.  Use of
+this source code is governed by a BSD-style license that can be found in
+the <code>LICENSE</code> file.</p>
+</td>
+	<td class="code"><pre><code>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><h2>Imports and globals</h2>
+</td>
+	<td class="code"><pre><code>
+<div class="keyword">package</div> <div class="ident">main</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;bytes&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;flag&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/dhconnelly/blackfriday&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/dhconnelly/litebrite&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;io/ioutil&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;regexp&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;text/template&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">templ</div>  <div class="operator">*</div><div class="ident">template</div><div class="operator">.</div><div class="ident">Template</div>                     <div class="operator"></div><div class="comment">// html template for generated docs</div>
+	<div class="ident">style</div>  <div class="ident">string</div>                                 <div class="operator"></div><div class="comment">// css styles to inline</div>
+	<div class="ident">match</div>  <div class="operator">=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`^\s*//[^\n]\s?`</div><div class="operator">)</div> <div class="operator"></div><div class="comment">// pattern for extracted comments</div>
+	<div class="ident">sep</div>    <div class="operator">=</div> <div class="literal">&#34;/*[docgoseparator]*/&#34;</div>               <div class="operator"></div><div class="comment">// replacement for comment groups</div>
+	<div class="ident">unsep</div>  <div class="operator">=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`&lt;div class=&#34;comment&#34;&gt;/\*\[docgoseparator\]\*/&lt;/div&gt;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">outdir</div> <div class="operator">=</div> <div class="ident">flag</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="literal">&#34;outdir&#34;</div><div class="operator">,</div> <div class="literal">&#34;.&#34;</div><div class="operator">,</div> <div class="literal">&#34;output directory for docs&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">dftres</div> <div class="operator">=</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Getenv</div><div class="operator">(</div><div class="literal">&#34;GOPATH&#34;</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">&#34;/src/github.com/dhconnelly/docgo&#34;</div><div class="operator"></div>
+	<div class="ident">resdir</div> <div class="operator">=</div> <div class="ident">flag</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="literal">&#34;resdir&#34;</div><div class="operator">,</div> <div class="ident">dftres</div><div class="operator">,</div> <div class="literal">&#34;directory containing CSS and templates&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><h2>Generating documentation</h2>
+</td>
+	<td class="code"><pre><code>
+<div class="keyword">type</div> <div class="ident">docs</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">Filename</div> <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">Sections</div> <div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">section</div><div class="operator"></div>
+	<div class="ident">Style</div>    <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">type</div> <div class="ident">section</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">Doc</div>  <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">Code</div> <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Extract comments from source code, pass them through markdown, highlight the
+code, and render to a string.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GenerateDocs</div><div class="operator">(</div><div class="ident">title</div><div class="operator">,</div> <div class="ident">src</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="ident">sections</div> <div class="operator">:=</div> <div class="ident">extractSections</div><div class="operator">(</div><div class="ident">src</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">highlightCode</div><div class="operator">(</div><div class="ident">sections</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">markdownComments</div><div class="operator">(</div><div class="ident">sections</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">var</div> <div class="ident">b</div> <div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">templ</div><div class="operator">.</div><div class="ident">Execute</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">docs</div><div class="operator">{</div><div class="ident">title</div><div class="operator">,</div> <div class="ident">sections</div><div class="operator">,</div> <div class="ident">style</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">b</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><h2>Processing sections</h2>
+</td>
+	<td class="code"><pre><code>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Split the source into sections, where each section contains a comment group
+(consecutive leading-line // comments) and the code that follows that group.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">extractSections</div><div class="operator">(</div><div class="ident">source</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">section</div> <div class="operator">{</div>
+	<div class="ident">sections</div> <div class="operator">:=</div> <div class="ident">make</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">section</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">current</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">section</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">line</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">source</div><div class="operator">,</div> <div class="literal">&#34;\n&#34;</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>When a candidate comment line is found, add it to the current
+comment group (or create a new section if code has already been
+added to the current section).</p>
+</td>
+	<td class="code"><pre><code>		<div class="keyword">if</div> <div class="ident">match</div><div class="operator">.</div><div class="ident">FindString</div><div class="operator">(</div><div class="ident">line</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
+			<div class="keyword">if</div> <div class="ident">current</div><div class="operator">.</div><div class="ident">Code</div> <div class="operator">!=</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
+				<div class="ident">sections</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">sections</div><div class="operator">,</div> <div class="ident">current</div><div class="operator">)</div><div class="operator"></div>
+				<div class="ident">current</div> <div class="operator">=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">section</div><div class="operator">)</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Strip out the comment delimiters</p>
+</td>
+	<td class="code"><pre><code>			<div class="ident">current</div><div class="operator">.</div><div class="ident">Doc</div> <div class="operator">&#43;=</div> <div class="ident">match</div><div class="operator">.</div><div class="ident">ReplaceAllString</div><div class="operator">(</div><div class="ident">line</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">&#34;\n&#34;</div><div class="operator"></div>
+		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+			<div class="ident">current</div><div class="operator">.</div><div class="ident">Code</div> <div class="operator">&#43;=</div> <div class="ident">line</div> <div class="operator">&#43;</div> <div class="literal">&#34;\n&#34;</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">sections</div><div class="operator">,</div> <div class="ident">current</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Apply markdown to each section's documentation.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">markdownComments</div><div class="operator">(</div><div class="ident">sections</div> <div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">section</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">section</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">sections</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>IMHO BlackFriday should use a string interface, since it
+operates on text (not arbitrary binary) data...</p>
+</td>
+	<td class="code"><pre><code>		<div class="ident">section</div><div class="operator">.</div><div class="ident">Doc</div> <div class="operator">=</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">blackfriday</div><div class="operator">.</div><div class="ident">MarkdownBasic</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">section</div><div class="operator">.</div><div class="ident">Doc</div><div class="operator">)</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Apply syntax highlighting to each section's code.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">highlightCode</div><div class="operator">(</div><div class="ident">sections</div> <div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">section</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Rejoin the source code fragments, using sep as delimiter</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">segments</div> <div class="operator">:=</div> <div class="ident">make</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">section</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">sections</div> <div class="operator">{</div>
+		<div class="ident">segments</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">segments</div><div class="operator">,</div> <div class="ident">section</div><div class="operator">.</div><div class="ident">Code</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">code</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Join</div><div class="operator">(</div><div class="ident">segments</div><div class="operator">,</div> <div class="ident">sep</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Highlight the joined source</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">h</div> <div class="operator">:=</div> <div class="ident">litebrite</div><div class="operator">.</div><div class="ident">Highlighter</div><div class="operator">{</div><div class="literal">&#34;operator&#34;</div><div class="operator">,</div> <div class="literal">&#34;ident&#34;</div><div class="operator">,</div> <div class="literal">&#34;literal&#34;</div><div class="operator">,</div> <div class="literal">&#34;keyword&#34;</div><div class="operator">,</div> <div class="literal">&#34;comment&#34;</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">hlcode</div> <div class="operator">:=</div> <div class="ident">h</div><div class="operator">.</div><div class="ident">Highlight</div><div class="operator">(</div><div class="ident">code</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Collect the code between subsequent <code>unsep</code>s</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">matches</div> <div class="operator">:=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">unsep</div><div class="operator">.</div><div class="ident">FindAllStringIndex</div><div class="operator">(</div><div class="ident">hlcode</div><div class="operator">,</div> <div class="operator">-</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">int</div><div class="operator">{</div><div class="ident">len</div><div class="operator">(</div><div class="ident">hlcode</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">lastend</div> <div class="operator">:=</div> <div class="literal">0</div><div class="operator"></div>
+	<div class="keyword">for</div> <div class="ident">i</div><div class="operator">,</div> <div class="ident">match</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">matches</div> <div class="operator">{</div>
+		<div class="ident">sections</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">Code</div> <div class="operator">=</div> <div class="ident">hlcode</div><div class="operator">[</div><div class="ident">lastend</div><div class="operator">:</div><div class="ident">match</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">]</div><div class="operator"></div>
+		<div class="ident">lastend</div> <div class="operator">=</div> <div class="ident">match</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><h2>Setup and running</h2>
+</td>
+	<td class="code"><pre><code>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Load the HTML template and CSS styles for output.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">loadResources</div><div class="operator">(</div><div class="ident">path</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">data</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadFile</div><div class="operator">(</div><div class="ident">path</div> <div class="operator">&#43;</div> <div class="literal">&#34;/doc.css&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">style</div> <div class="operator">=</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">data</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">templ</div> <div class="operator">=</div> <div class="ident">template</div><div class="operator">.</div><div class="ident">Must</div><div class="operator">(</div><div class="ident">template</div><div class="operator">.</div><div class="ident">ParseFiles</div><div class="operator">(</div><div class="ident">path</div> <div class="operator">&#43;</div> <div class="literal">&#34;/doc.templ&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Generate documentation for a source file.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">processFile</div><div class="operator">(</div><div class="ident">filename</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">src</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadFile</div><div class="operator">(</div><div class="ident">filename</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">name</div> <div class="operator">:=</div> <div class="ident">filename</div><div class="operator">[</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">LastIndex</div><div class="operator">(</div><div class="ident">filename</div><div class="operator">,</div> <div class="literal">&#34;/&#34;</div><div class="operator">)</div><div class="operator">&#43;</div><div class="literal">1</div><div class="operator">:</div><div class="operator">]</div><div class="operator"></div>
+	<div class="ident">outname</div> <div class="operator">:=</div> <div class="operator">*</div><div class="ident">outdir</div> <div class="operator">&#43;</div> <div class="literal">&#34;/&#34;</div> <div class="operator">&#43;</div> <div class="ident">name</div><div class="operator">[</div><div class="operator">:</div><div class="ident">len</div><div class="operator">(</div><div class="ident">name</div><div class="operator">)</div><div class="operator">-</div><div class="literal">2</div><div class="operator">]</div> <div class="operator">&#43;</div> <div class="literal">&#34;html&#34;</div><div class="operator"></div>
+	<div class="ident">docs</div> <div class="operator">:=</div> <div class="ident">GenerateDocs</div><div class="operator">(</div><div class="ident">name</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">src</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err2</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">WriteFile</div><div class="operator">(</div><div class="ident">outname</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">docs</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">0666</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err2</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err2</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">main</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">flag</div><div class="operator">.</div><div class="ident">Parse</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">loadResources</div><div class="operator">(</div><div class="operator">*</div><div class="ident">resdir</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">filename</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">flag</div><div class="operator">.</div><div class="ident">Args</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">processFile</div><div class="operator">(</div><div class="ident">filename</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
