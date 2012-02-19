@@ -1,0 +1,3 @@
+docgo is a lightweight literate-programming-style documentation generator for
+Go source code.  It is modeled on Jeremy Ashkenas's docco.  See
+dhconnelly.github.com/docgo for more details.
