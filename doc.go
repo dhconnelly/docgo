@@ -16,9 +16,9 @@
 // 
 // `go get github.com/dhconnelly/docgo`<br>
 // `go install github.com/dhconnelly/docgo`<br>
-// `docgo file1.go file2.go`
+// `docgo file.go`
 // 
-// This will create `file1.html` and `file2.html` in the current directory.
+// This will create `file.html` in the current directory.
 // 
 // There are two command-line flags:
 // 
