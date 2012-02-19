@@ -1,28 +1,63 @@
+// docgo is a [Go](http://golang.org) implementation of [Jeremy Ashkenas]
+// (http://github.com/jashkenas)'s [docco] (http://jashkenas.github.com/docco/),
+// a literate-programming-style documentation generator.  Running docgo on your
+// Go source files produces HTML with comments and code side-by-side.
+// 
+// Comments are processed by [Markdown]
+// (http://daringfireball.net/projects/markdown) using a [fork]
+// (http://github.com/dhconnelly/blackfriday) of [Russ Ross]
+// (http://github.com/russross)'s [BlackFriday]
+// (http://github.com/russross/blackfriday) library, and code is
+// syntax-highlighted using [litebrite](http://dhconnelly.github.com/litebrite),
+// a Go syntax highlighting library.
+// 
+// With a recent Go weekly build (I'm using `weekly.2012-2-07`), you can get,
+// install, and run docgo by doing the following at a command line:
+// 
+// `go get github.com/dhconnelly/docgo`<br>
+// `go install github.com/dhconnelly/docgo`<br>
+// `docgo file1.go file2.go`
+// 
+// This will create `file1.html` and `file2.html` in the current directory.
+// 
+// There are two command-line flags:
+// 
+// - `resdir`: a path to the directory containing the CSS styles and HTML
+//   templates (this is usually the docgo source directory)
+// - `outdir`: the directory to which the generated HTML should be writen
+
+// docgo is copyright 2012 Daniel Connelly.  All rights reserved.  Use of
+// this source code is governed by a BSD-style license that can be found in
+// the `LICENSE` file.
+
+// ## Imports and globals
+
 package main
 
 import (
 	"bytes"
 	"flag"
 	"github.com/dhconnelly/blackfriday"
+	"github.com/dhconnelly/litebrite"
 	"io/ioutil"
-	"litebrite"
+	"os"
 	"regexp"
 	"strings"
 	"text/template"
 )
 
 var (
-	templ     *template.Template                     // html template for generated docs
-	style     string                                 // css styles to inline
-	match     = regexp.MustCompile(`^\s*//[^\n]\s?`) // pattern for extracted comments
-	sep       = "/*[docgoseparator]*/"               // replacement for comment groups
-	unsep     = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
-	outdir    = flag.String("outdir", ".", "output directory for docs")
-	resources = flag.String("resources", ".", "directory containing CSS and templates")
+	templ  *template.Template                     // html template for generated docs
+	style  string                                 // css styles to inline
+	match  = regexp.MustCompile(`^\s*//[^\n]\s?`) // pattern for extracted comments
+	sep    = "/*[docgoseparator]*/"               // replacement for comment groups
+	unsep  = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
+	outdir = flag.String("outdir", ".", "output directory for docs")
+	dftres = os.Getenv("GOPATH") + "/src/github.com/dhconnelly/docgo"
+	resdir = flag.String("resdir", dftres, "directory containing CSS and templates")
 )
 
-// Generating documentation
-// ------------------------
+// ## Generating documentation
 
 type docs struct {
 	Filename string
@@ -50,8 +85,7 @@ func GenerateDocs(title, src string) string {
 	return b.String()
 }
 
-// Processing sections
-// -------------------
+// ## Processing sections
 
 // Split the source into sections, where each section contains a comment group
 // (consecutive leading-line // comments) and the code that follows that group.
@@ -138,7 +172,7 @@ func processFile(filename string) {
 
 func main() {
 	flag.Parse()
-	loadResources(*resources)
+	loadResources(*resdir)
 	for _, filename := range flag.Args() {
 		processFile(filename)
 	}

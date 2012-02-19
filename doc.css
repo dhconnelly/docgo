@@ -76,10 +76,10 @@ body {
     padding-right: 15px;
     border-left: 1px;
     overflow-x: hidden;
+    vertical-align: top;
 }
 
 #docgo .code pre code  {
-    vertical-align: top;
     font-size: 12px;
     line-height: 18px;
     font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
