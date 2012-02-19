@@ -2,30 +2,32 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"flag"
 	"github.com/dhconnelly/blackfriday"
 	"io/ioutil"
 	"litebrite"
-	"os"
 	"regexp"
 	"strings"
 	"text/template"
 )
 
-var templ = template.Must(template.ParseFiles("doc.templ"))
+var (
+	templ     *template.Template                     // html template for generated docs
+	style     string                                 // css styles to inline
+	match     = regexp.MustCompile(`^\s*//[^\n]\s?`) // pattern for extracted comments
+	sep       = "/*[docgoseparator]*/"               // replacement for comment groups
+	unsep     = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
+	outdir    = flag.String("outdir", ".", "output directory for docs")
+	resources = flag.String("resources", ".", "directory containing CSS and templates")
+)
 
-func generateDocs(title, src string) string {
-	var b bytes.Buffer
-	sections := extractSections(src)
-	highlightSections(sections)
-	markdownComments(sections)
-	templ.Execute(&b, docs{title, sections})
-	return b.String()
-}
+// Generating documentation
+// ------------------------
 
 type docs struct {
-	Title    string
+	Filename string
 	Sections []*section
+	Style    string
 }
 
 type section struct {
@@ -33,14 +35,34 @@ type section struct {
 	Code string
 }
 
-var match = regexp.MustCompile(`^\s*//[^\n]\s?`) // Pattern for extracted comments
+// Extract comments from source code, pass them through markdown, highlight the
+// code, and render to a string.
+func GenerateDocs(title, src string) string {
+	sections := extractSections(src)
+	highlightCode(sections)
+	markdownComments(sections)
 
+	var b bytes.Buffer
+	err := templ.Execute(&b, docs{title, sections, style})
+	if err != nil {
+		panic(err.Error())
+	}
+	return b.String()
+}
+
+// Processing sections
+// -------------------
+
+// Split the source into sections, where each section contains a comment group
+// (consecutive leading-line // comments) and the code that follows that group.
 func extractSections(source string) []*section {
 	sections := make([]*section, 0)
 	current := new(section)
 
-	// Collect lines up to the next comment group in a section
 	for _, line := range strings.Split(source, "\n") {
+		// When a candidate comment line is found, add it to the current
+		// comment group (or create a new section if code has already been
+		// added to the current section).
 		if match.FindString(line) != "" {
 			if current.Code != "" {
 				sections = append(sections, current)
@@ -56,31 +78,30 @@ func extractSections(source string) []*section {
 	return append(sections, current)
 }
 
+// Apply markdown to each section's documentation.
 func markdownComments(sections []*section) {
 	for _, section := range sections {
+		// IMHO BlackFriday should use a string interface, since it
+		// operates on text (not arbitrary binary) data...
 		section.Doc = string(blackfriday.MarkdownBasic([]byte(section.Doc)))
 	}
-	return
 }
 
-const SEP = "/*[docgoseparator]*/" // replacement for comment groups
-
-var UNSEP = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
-
-func highlightSections(sections []*section) {
-	// Rejoin the source code fragments, using SEP as delimiter
+// Apply syntax highlighting to each section's code.
+func highlightCode(sections []*section) {
+	// Rejoin the source code fragments, using sep as delimiter
 	segments := make([]string, 0)
 	for _, section := range sections {
 		segments = append(segments, section.Code)
 	}
-	code := strings.Join(segments, SEP)
+	code := strings.Join(segments, sep)
 
 	// Highlight the joined source
 	h := litebrite.Highlighter{"operator", "ident", "literal", "keyword", "comment"}
 	hlcode := h.Highlight(code)
 
-	// Collect the code between subsequent `UNSEP`s
-	matches := append(UNSEP.FindAllStringIndex(hlcode, -1), []int{len(hlcode), 0})
+	// Collect the code between subsequent `unsep`s
+	matches := append(unsep.FindAllStringIndex(hlcode, -1), []int{len(hlcode), 0})
 	lastend := 0
 	for i, match := range matches {
 		sections[i].Code = hlcode[lastend:match[0]]
@@ -88,29 +109,37 @@ func highlightSections(sections []*section) {
 	}
 }
 
-// ## Running
+// ## Setup and running
+
+// Load the HTML template and CSS styles for output.
+func loadResources(path string) {
+	data, err := ioutil.ReadFile(path + "/doc.css")
+	if err != nil {
+		panic(err.Error())
+	}
+	style = string(data)
+	templ = template.Must(template.ParseFiles(path + "/doc.templ"))
+}
+
+// Generate documentation for a source file.
+func processFile(filename string) {
+	src, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err.Error())
+	}
+	name := filename[strings.LastIndex(filename, "/")+1:]
+	outname := *outdir + "/" + name[:len(name)-2] + "html"
+	docs := GenerateDocs(name, string(src))
+	err2 := ioutil.WriteFile(outname, []byte(docs), 0666)
+	if err2 != nil {
+		panic(err2.Error())
+	}
+}
 
 func main() {
-	if fi, err := os.Stat("docs"); err != nil || !fi.IsDir() {
-		fmt.Fprintln("Failed to open directory docs")
-		return
-	}
-	for _, filename := range os.Args[1:] {
-		infile, err := os.Open(filename)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			return
-		}
-
-		fi, _ := infile.Stat()
-		outname := "docs/" + strings.Replace(fi.Name(), ".go", ".html", 1)
-		outfile, err2 := os.Create(outname)
-		if err2 != nil {
-			fmt.Fprintln(os.Stderr, err2.Error())
-			return
-		}
-
-		src, _ := ioutil.ReadAll(infile)
-		outfile.WriteString(generateDocs(fi.Name(), string(src)))
+	flag.Parse()
+	loadResources(*resources)
+	for _, filename := range flag.Args() {
+		processFile(filename)
 	}
 }

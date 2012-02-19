@@ -70,10 +70,12 @@ body {
 }
 
 #docgo .code {
-    width: 684px;
+    min-width: 650px;
+    max-width: 650px;
     padding-left: 25px;
     padding-right: 15px;
     border-left: 1px;
+    overflow-x: hidden;
 }
 
 #docgo .code pre code  {
