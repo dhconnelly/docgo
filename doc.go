@@ -11,6 +11,8 @@
 // syntax-highlighted using [litebrite](http://dhconnelly.github.com/litebrite),
 // a Go syntax highlighting library.
 // 
+// The source is available on [GitHub](http://github.com/dhconnelly/docgo).
+// 
 // With a recent Go weekly build (I'm using `weekly.2012-2-07`), you can get,
 // install, and run docgo by doing the following at a command line:
 // 
