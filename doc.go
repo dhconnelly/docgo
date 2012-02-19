@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"bytes"
 	"fmt"
 	"github.com/dhconnelly/blackfriday"
 	"io/ioutil"
@@ -12,9 +12,21 @@ import (
 	"text/template"
 )
 
-var outdir *string = flag.String("outdir", ".", "directory for generated docs")
+var templ = template.Must(template.ParseFiles("doc.templ"))
 
-var t = template.Must(template.ParseFiles("doc.templ"))
+func generateDocs(title, src string) string {
+	var b bytes.Buffer
+	sections := extractSections(src)
+	highlightSections(sections)
+	markdownComments(sections)
+	templ.Execute(&b, docs{title, sections})
+	return b.String()
+}
+
+type docs struct {
+	Title    string
+	Sections []*section
+}
 
 type section struct {
 	Doc  string
@@ -51,11 +63,9 @@ func markdownComments(sections []*section) {
 	return
 }
 
-const SEP = "/*[docgoseparator]*/"
+const SEP = "/*[docgoseparator]*/" // replacement for comment groups
 
-var UNSEP = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/\s*</div>`)
-var BEGINWS = len("<div class=\"comment\">") + len(SEP)
-var ENDWS = len("</div>")
+var UNSEP = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
 
 func highlightSections(sections []*section) {
 	// Rejoin the source code fragments, using SEP as delimiter
@@ -67,57 +77,40 @@ func highlightSections(sections []*section) {
 
 	// Highlight the joined source
 	h := litebrite.Highlighter{"operator", "ident", "literal", "keyword", "comment"}
-	hlcode := []byte(h.Highlight(code))
+	hlcode := h.Highlight(code)
 
-	// Collect the code between subsequent `UNSEP`s.  Some whitespace from
-	// the source might be in the `<div>...</div>` that wraps SEP, so we
-	// we will add it back when we find it.
-	matches := UNSEP.FindAllIndex(hlcode, -1)
+	// Collect the code between subsequent `UNSEP`s
+	matches := append(UNSEP.FindAllStringIndex(hlcode, -1), []int{len(hlcode), 0})
 	lastend := 0
-	lastws := ""
 	for i, match := range matches {
-		sections[i].Code = lastws + string(hlcode[lastend:match[0]])
-		// Extra whitespace comes between `SEP` and the closing `</div>`
-		lastws = string(hlcode[match[0]+BEGINWS : match[1]-ENDWS])
+		sections[i].Code = hlcode[lastend:match[0]]
 		lastend = match[1]
 	}
-	sections[len(sections)-1].Code = lastws + string(hlcode[lastend:])
 }
 
-type File struct {
-	Title    string
-	Sections []*section
-}
-
-func processFile(filename string) {
-	src, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-		return
-	}
-	fi, _ := os.Stat(filename) // Ignore error--already read the file
-
-	sections := extractSections(string(src))
-	highlightSections(sections)
-	markdownComments(sections)
-
-	name := strings.Replace(fi.Name(), ".go", "", -1)
-	out, err2 := os.Create(name + ".html") // TODO use outdir
-	if err2 != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err2.Error())
-		return
-	}
-
-	errt := t.Execute(out, File{name, sections})
-	if errt != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", errt.Error())
-		return
-	}
-}
+// ## Running
 
 func main() {
-	flag.Parse()
-	for _, filename := range flag.Args() {
-		processFile(filename)
+	if fi, err := os.Stat("docs"); err != nil || !fi.IsDir() {
+		fmt.Fprintln("Failed to open directory docs")
+		return
+	}
+	for _, filename := range os.Args[1:] {
+		infile, err := os.Open(filename)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			return
+		}
+
+		fi, _ := infile.Stat()
+		outname := "docs/" + strings.Replace(fi.Name(), ".go", ".html", 1)
+		outfile, err2 := os.Create(outname)
+		if err2 != nil {
+			fmt.Fprintln(os.Stderr, err2.Error())
+			return
+		}
+
+		src, _ := ioutil.ReadAll(infile)
+		outfile.WriteString(generateDocs(fi.Name(), string(src)))
 	}
 }
