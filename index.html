@@ -103,7 +103,7 @@
 a literate-programming-style documentation generator.  Running docgo on your
 Go source files produces HTML with comments and code side-by-side.</p>
 
-<p>Comments are processed by <a href="http://daringfireball.net/projects/markdown">Markdown</a> using a <a href="http://github.com/dhconnelly/blackfriday">fork</a> of <a href="http://github.com/russross">Russ Ross</a>'s <a href="http://github.com/russross/blackfriday">BlackFriday</a> library, and code is
+<p>Comments are processed by <a href="http://daringfireball.net/projects/markdown">Markdown</a> using <a href="http://github.com/russross">Russ Ross</a>'s <a href="http://github.com/russross/blackfriday">BlackFriday</a> library, and code is
 syntax-highlighted using <a href="http://dhconnelly.github.com/litebrite">litebrite</a>,
 a Go syntax highlighting library.</p>
 
@@ -147,7 +147,7 @@ the <code>LICENSE</code> file.</p>
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;bytes&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;flag&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/dhconnelly/blackfriday&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/russross/blackfriday&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/dhconnelly/litebrite&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;io/ioutil&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
@@ -159,7 +159,7 @@ the <code>LICENSE</code> file.</p>
 <div class="keyword">var</div> <div class="operator">(</div>
 	<div class="ident">templ</div>  <div class="operator">*</div><div class="ident">template</div><div class="operator">.</div><div class="ident">Template</div>                     <div class="operator"></div><div class="comment">// html template for generated docs</div>
 	<div class="ident">style</div>  <div class="ident">string</div>                                 <div class="operator"></div><div class="comment">// css styles to inline</div>
-	<div class="ident">match</div>  <div class="operator">=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`^\s*//[^\n]\s?`</div><div class="operator">)</div> <div class="operator"></div><div class="comment">// pattern for extracted comments</div>
+	<div class="ident">match</div>  <div class="operator">=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`^\s*//\s?`</div><div class="operator">)</div> <div class="operator"></div><div class="comment">// pattern for extracted comments</div>
 	<div class="ident">sep</div>    <div class="operator">=</div> <div class="literal">&#34;/*[docgoseparator]*/&#34;</div>               <div class="operator"></div><div class="comment">// replacement for comment groups</div>
 	<div class="ident">unsep</div>  <div class="operator">=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`&lt;div class=&#34;comment&#34;&gt;/\*\[docgoseparator\]\*/&lt;/div&gt;`</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">outdir</div> <div class="operator">=</div> <div class="ident">flag</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="literal">&#34;outdir&#34;</div><div class="operator">,</div> <div class="literal">&#34;.&#34;</div><div class="operator">,</div> <div class="literal">&#34;output directory for docs&#34;</div><div class="operator">)</div><div class="operator"></div>
