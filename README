@@ -9,7 +9,6 @@ dhconnelly.github.com/docgo for the result of running docgo on its source code.
 ## INSTALLATION
 
 go get github.com/dhconnelly/docgo
-go install github.com/dhconnelly/docgo
 
 ## USAGE
 
