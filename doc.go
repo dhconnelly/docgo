@@ -4,8 +4,7 @@
 // Go source files produces HTML with comments and code side-by-side.
 // 
 // Comments are processed by [Markdown]
-// (http://daringfireball.net/projects/markdown) using a [fork]
-// (http://github.com/dhconnelly/blackfriday) of [Russ Ross]
+// (http://daringfireball.net/projects/markdown) using [Russ Ross]
 // (http://github.com/russross)'s [BlackFriday]
 // (http://github.com/russross/blackfriday) library, and code is
 // syntax-highlighted using [litebrite](http://dhconnelly.github.com/litebrite),
@@ -39,7 +38,7 @@ package main
 import (
 	"bytes"
 	"flag"
-	"github.com/dhconnelly/blackfriday"
+	"github.com/russross/blackfriday"
 	"github.com/dhconnelly/litebrite"
 	"io/ioutil"
 	"os"
