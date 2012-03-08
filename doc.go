@@ -38,24 +38,25 @@ package main
 import (
 	"bytes"
 	"flag"
-	"github.com/russross/blackfriday"
 	"github.com/dhconnelly/litebrite"
+	"github.com/russross/blackfriday"
+	"go/build"
 	"io/ioutil"
-	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
 )
 
 var (
-	templ  *template.Template                     // html template for generated docs
-	style  string                                 // css styles to inline
+	templ  *template.Template                // html template for generated docs
+	style  string                            // css styles to inline
 	match  = regexp.MustCompile(`^\s*//\s?`) // pattern for extracted comments
-	sep    = "/*[docgoseparator]*/"               // replacement for comment groups
+	sep    = "/*[docgoseparator]*/"          // replacement for comment groups
 	unsep  = regexp.MustCompile(`<div class="comment">/\*\[docgoseparator\]\*/</div>`)
 	outdir = flag.String("outdir", ".", "output directory for docs")
-	dftres = os.Getenv("GOPATH") + "/src/github.com/dhconnelly/docgo"
-	resdir = flag.String("resdir", dftres, "directory containing CSS and templates")
+	resdir = flag.String("resdir", "", "directory containing CSS and templates")
+	pkg    = "github.com/dhconnelly/docgo" // for locating the resources if not specified
 )
 
 // ## Generating documentation
@@ -146,6 +147,20 @@ func highlightCode(sections []*section) {
 
 // ## Setup and running
 
+// Locate the HTML template and CSS.
+func findResources() string {
+	if *resdir != "" {
+		return *resdir
+	}
+
+	// find the path to the package root to locate the resource files
+	p, err := build.Default.Import(pkg, "", build.FindOnly)
+	if err != nil {
+		panic(err.Error())
+	}
+	return p.Dir
+}
+
 // Load the HTML template and CSS styles for output.
 func loadResources(path string) {
 	data, err := ioutil.ReadFile(path + "/doc.css")
@@ -162,8 +177,8 @@ func processFile(filename string) {
 	if err != nil {
 		panic(err.Error())
 	}
-	name := filename[strings.LastIndex(filename, "/")+1:]
-	outname := *outdir + "/" + name[:len(name)-2] + "html"
+	name := filepath.Base(filename)
+	outname := filepath.Join(*outdir, name[:len(name)-2]) + "html"
 	docs := GenerateDocs(name, string(src))
 	err2 := ioutil.WriteFile(outname, []byte(docs), 0666)
 	if err2 != nil {
@@ -173,7 +188,7 @@ func processFile(filename string) {
 
 func main() {
 	flag.Parse()
-	loadResources(*resdir)
+	loadResources(findResources())
 	for _, filename := range flag.Args() {
 		processFile(filename)
 	}
